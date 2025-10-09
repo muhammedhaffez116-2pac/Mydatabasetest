@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>القاموس المورد القريب إنجليزي عربي - برمجة وتطوير محمد السيد</title>
+    <style>
+        body {font-family: Arial, sans-serif; margin: 0; background: #fff;}
+        .main-header {background: #111; color: #fff; text-align: center; padding: 15px;}
+        .main-title { font-size: 24px; font-weight: bold; margin-bottom: 5px;}
+        .sub-title { font-size: 14px; color: #ccc;}
+        .contact-info { font-size: 12px; margin-top: 5px; color: #aaa;}
+        .app-container {padding: 15px;}
+        .database-item {padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.3s;}
+        .database-item.active {background: #f0f0f0;}
+        .word-item {padding: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center;}
+        .word-text { flex-grow: 1; font-weight: bold;}
+        .word-actions button {margin-right: 5px; padding: 5px 10px; border-radius: 3px; border: none; cursor: pointer;}
+        .search-btn {background: #0078d7; color: #fff;}
+        .audio-btn {background: #4CAF50; color: #fff;}
+        .empty-message {text-align: center; color: #666; padding: 20px;}
+        .words-section {display: none;}
+        .words-section.active {display: block;}
+        h3 {color: #0078d7;}
+        #searchPage {display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:#fff; z-index:1000; padding:20px; overflow-y:auto;}
+        .search-results {max-width:800px; margin:20px auto; padding:20px; background:#f9f9f9; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.1);}
+        .search-results h2 {color:#0078d7; text-align:center;}
+        .links {display:flex; flex-direction:column; gap:10px; margin-top:20px;}
+        .links a {display:block; padding:10px; background:#0078d7; color:#fff; text-decoration:none; border-radius:4px; text-align:center;}
+        .links a:hover {background:#005fa3;}
+        #back-from-search {margin-top:20px; width:100%; padding:10px 15px; background:#0078d7; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:16px;}
+        #back-from-search:hover {background:#005fa3;}
+    </style>
+</head>
+<body>
+    <div class="main-header">
+        <div class="main-title">القاموس المورد القريب إنجليزي عربي</div>
+        <div class="sub-title">برمجة وتطوير محمد السيد</div>
+        <div class="contact-info">للاستعلام والاتصال: xpacxx2@hotmail.com , WhatsApp: +01221347946</div>
+    </div>
+    <div class="app-container">
+        <div>
+            <h3>صفحات القاموس</h3>
+            <div id="databasesList"></div>
+        </div>
+        <div class="words-section" id="wordsSection">
+            <h3 id="wordsSectionTitle"></h3>
+            <div id="savedWordsList"></div>
+        </div>
+    </div>
+    <!-- صفحة نتائج البحث -->
+    <div id="searchPage">
+        <div class="search-results">
+            <h2>نتائج البحث: <span id="searchWord"></span></h2>
+            <div class="links">
+                <a id="bingImages" target="_blank">Bing Images</a>
+                <a id="reverso" target="_blank">Reverso Context</a>
+                <a id="googleTranslate" target="_blank">Google Translate</a>
+                <a id="deepl" target="_blank">DeepL Translate</a>
+                <a id="oxford" target="_blank">Oxford Dictionary</a>
+                <a id="googleDefinition" target="_blank">تعريف جوجل</a>
+                <a id="forvo" target="_blank">Forvo النطق</a>
+                <a id="youglish" target="_blank">YouGlish</a>
+            </div>
+            <button id="back-from-search">العودة للصفحة الرئيسية</button>
+        </div>
+    </div>
+    <script>
+        const autoUrls = [
+            "https://raw.githubusercontent.com/muhammedhaffez116-2pac/Mydatabasetest/refs/heads/main/009.json",
+            "https://raw.githubusercontent.com/muhammedhaffez116-2pac/Mydatabasetest/refs/heads/main/010.json",
+            "https://raw.githubusercontent.com/muhammedhaffez116-2pac/Mydatabasetest/refs/heads/main/011.json"
+        ];
+
+        let databases = [];
+        let currentDbIdx = null;
+
+        function loadAllDatabases() {
+            databases = [];
+            autoUrls.forEach(url => {
+                fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    let urlParts = url.split('/');
+                    let dbName = urlParts[urlParts.length - 1].replace('.json',''); // حذف الامتداد
+                    let wordsArr = [];
+                    if (Array.isArray(data)) {
+                        wordsArr = data;
+                    } else if (Array.isArray(data.words)) {
+                        wordsArr = data.words;
+                    }
+                    databases.push({ name: dbName, words: wordsArr });
+                })
+                .catch(_=>{});
+            });
+            setTimeout(displayDatabases, 2000); // انتظر التحميل
+        }
+
+        function displayDatabases() {
+            const list = document.getElementById('databasesList');
+            list.innerHTML = '';
+            if (databases.length === 0) {
+                list.innerHTML = '<div class="empty-message">لا توجد صفحات القاموس متاحة</div>';
+                return;
+            }
+            databases.forEach((db, idx) => {
+                const div = document.createElement('div');
+                div.className = 'database-item';
+                div.textContent = db.name;
+                div.onclick = () => showWords(idx);
+                if (currentDbIdx === idx) div.classList.add('active');
+                list.appendChild(div);
+            });
+        }
+
+        function showWords(idx) {
+            currentDbIdx = idx;
+            displayDatabases();
+            const db = databases[idx];
+            document.getElementById('wordsSection').classList.add('active');
+            document.getElementById('wordsSectionTitle').textContent = db.name;
+            const savedWordsList = document.getElementById('savedWordsList');
+            savedWordsList.innerHTML = '';
+            if (!db.words || db.words.length === 0) {
+                savedWordsList.innerHTML = '<div class="empty-message">لا توجد كلمات</div>';
+                return;
+            }
+            db.words.forEach(obj => {
+                let w = obj.word ? obj.word : obj;
+                const wordDiv = document.createElement('div');
+                wordDiv.className = 'word-item';
+                const wordSpan = document.createElement('span');
+                wordSpan.className = 'word-text';
+                wordSpan.textContent = w;
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'word-actions';
+
+                const audioBtn = document.createElement('button');
+                audioBtn.textContent = '🔊';
+                audioBtn.className = 'audio-btn';
+                audioBtn.title = 'نطق الكلمة';
+                audioBtn.onclick = () => speakWord(w);
+
+                const searchBtn = document.createElement('button');
+                searchBtn.textContent = 'ابحث';
+                searchBtn.className = 'search-btn';
+                searchBtn.onclick = () => showSearchResults(w);
+
+                actionsDiv.appendChild(audioBtn);
+                actionsDiv.appendChild(searchBtn);
+                wordDiv.appendChild(wordSpan);
+                wordDiv.appendChild(actionsDiv);
+                savedWordsList.appendChild(wordDiv);
+            });
+        }
+
+        function speakWord(word) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                speechSynthesis.speak(utterance);
+            } else {
+                alert('ميزة نطق الكلمات غير مدعومة في متصفحك');
+            }
+        }
+
+        function showSearchResults(word) {
+            document.querySelector('.app-container').style.display = 'none';
+            document.getElementById('searchPage').style.display = 'block';
+            document.getElementById('searchWord').textContent = word;
+            document.getElementById('bingImages').href = `https://www.bing.com/images/search?q=${encodeURIComponent(word)}`;
+            document.getElementById('reverso').href = `https://context.reverso.net/translation/english-arabic/${encodeURIComponent(word)}`;
+            document.getElementById('googleTranslate').href = `https://translate.google.com/?sl=en&tl=ar&text=${encodeURIComponent(word)}`;
+            document.getElementById('oxford').href = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(word)}`;
+            document.getElementById('youglish').href = `https://youglish.com/pronounce/${encodeURIComponent(word)}/english?`;
+            document.getElementById('deepl').href = `https://www.deepl.com/translator#en/ar/${encodeURIComponent(word)}`;
+            document.getElementById('forvo').href = `https://forvo.com/word/${encodeURIComponent(word)}/#en`;
+            document.getElementById('googleDefinition').href = `https://www.google.com/search?q=define+${encodeURIComponent(word)}`;
+        }
+
+        document.getElementById('back-from-search').onclick = function() {
+            document.getElementById('searchPage').style.display = 'none';
+            document.querySelector('.app-container').style.display = 'block';
+        };
+
+        window.onload = loadAllDatabases;
+    </script>
+</body>
+</html>
