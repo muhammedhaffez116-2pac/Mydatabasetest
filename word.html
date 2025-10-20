@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>صفحة الكلمة</title>
+  <style>
+    body{font-family:Arial, sans-serif; margin:0; background:#fff; color:#111; direction:rtl}
+    .header{background:#111;color:#fff;padding:12px;text-align:center}
+    .header h2{margin:0;font-size:18px}
+    .container{padding:12px}
+    .links{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+    .link-btn{display:block;padding:10px;border:none;border-radius:6px;background:#0078d7;color:#fff;text-align:center;text-decoration:none;cursor:pointer}
+    .back{margin-top:12px;padding:10px;border-radius:6px;background:#666;color:#fff;text-align:center;display:inline-block;text-decoration:none}
+    .note{color:#666;margin-top:8px;font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2 id="wordTitle">...</h2>
+  </div>
+
+  <div class="container">
+    <div class="note">اختر أحد الروابط التالية لعرض النتائج داخل التطبيق. استخدم زر الرجوع في الهاتف للعودة.</div>
+
+    <div class="links" id="linksList">
+      <!-- روابط ستُنشأ ديناميكياً -->
+    </div>
+
+    <a id="backToIndex" class="back" href="index.html" target="_self">◀ العودة إلى القاموس</a>
+  </div>
+
+  <script>
+    // قراءة قيمة term من الـ URL
+    function getQueryParam(name){
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name) || '';
+    }
+
+    const term = getQueryParam('term');
+    document.getElementById('wordTitle').textContent = term || 'كلمة';
+
+    const links = [
+      {label:'Bing Images', url: `https://www.bing.com/images/search?q=${encodeURIComponent(term)}`},
+      {label:'Reverso Context', url: `https://context.reverso.net/translation/english-arabic/${encodeURIComponent(term)}`},
+      {label:'Google Translate', url: `https://translate.google.com/?sl=en&tl=ar&text=${encodeURIComponent(term)}`},
+      {label:'DeepL', url: `https://www.deepl.com/translator#en/ar/${encodeURIComponent(term)}`},
+      {label:'Oxford Learner', url: `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(term)}`},
+      {label:'Forvo', url: `https://forvo.com/word/${encodeURIComponent(term)}/#en`},
+      {label:'YouGlish', url: `https://youglish.com/pronounce/${encodeURIComponent(term)}/english`}
+    ];
+
+    const list = document.getElementById('linksList');
+    links.forEach(l=>{
+      const a = document.createElement('a');
+      a.className = 'link-btn';
+      a.textContent = l.label;
+      a.href = l.url;
+      a.target = '_self'; // افتح داخل نفس WebViewer
+      // استخدم window.location (بعض مواقع قد توجه للخارج تلقائياً لكن نحاول فتح داخل WebViewer)
+      a.onclick = function(e){
+        // نقوم بتوجيه المتصفح الى الرابط
+        window.location.href = this.href;
+        e.preventDefault();
+      };
+      list.appendChild(a);
+    });
+
+    // ملاحظة: لا توجد أي دوال JS للـ "رجوع" هنا — الرجوع يتم زر الهاتف أو الرابط "العودة إلى القاموس".
+  </script>
+</body>
+</html>
