@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>صفحة الكلمة</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fafafa;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h2 {
+      color: #222;
+      margin-bottom: 20px;
+    }
+
+    .link {
+      display: block;
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 14px;
+      width: 85%;
+      margin: 12px auto;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-decoration: none;
+      color: #0078d7;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .link:hover {
+      background-color: #e9f3ff;
+    }
+
+    .back {
+      margin-top: 25px;
+      display: inline-block;
+      background-color: #ff5555;
+      color: #fff;
+      padding: 10px 25px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .back:hover {
+      background-color: #ff7777;
+    }
+
+    footer {
+      margin-top: 30px;
+      color: #777;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <h2 id="wordTitle">الكلمة</h2>
+
+  <div id="links"></div>
+
+  <!-- زر الرجوع -->
+  <a class="back" id="backLink">⬅️ رجوع إلى القاموس</a>
+
+  <footer>برمجة وتطوير: محمد السيد</footer>
+
+  <script>
+    // الحصول على الكلمة من الرابط
+    const params = new URLSearchParams(window.location.search);
+    const term = params.get("term");
+
+    // عرض عنوان الكلمة
+    document.getElementById("wordTitle").textContent = "🔍 الكلمة: " + term;
+
+    const linksDiv = document.getElementById("links");
+
+    // القواميس التي يتم فتحها
+    const dictionaries = [
+      { name: "Google Translate", url: "https://translate.google.com/?sl=en&tl=ar&text=" + term },
+      { name: "Oxford Dictionary", url: "https://www.oxfordlearnersdictionaries.com/definition/english/" + term },
+      { name: "Cambridge Dictionary", url: "https://dictionary.cambridge.org/dictionary/english/" + term },
+      { name: "صور Google", url: "https://www.google.com/search?tbm=isch&q=" + term },
+      { name: "YouGlish (نطق الكلمة)", url: "https://youglish.com/pronounce/" + term + "/english" }
+    ];
+
+    // إنشاء الروابط داخل الصفحة
+    dictionaries.forEach(dic => {
+      const a = document.createElement("a");
+      a.className = "link";
+      a.href = dic.url;
+      a.target = "_self"; // يفتح داخل WebViewer
+      a.textContent = dic.name;
+      linksDiv.appendChild(a);
+    });
+
+    // زر الرجوع إلى الصفحة الأولى برابطها الكامل
+    const backUrl = "https://html-preview.github.io/?url=https://raw.githubusercontent.com/muhammedhaffez116-2pac/Mydatabasetest/main/index.html";
+    document.getElementById("backLink").href = backUrl;
+  </script>
+</body>
+</html>
