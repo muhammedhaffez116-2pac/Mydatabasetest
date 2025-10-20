@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>القاموس المورد القريب إنجليزي عربي - برمجة محمد السيد</title>
+  <style>
+    body {font-family: Arial, sans-serif; margin: 0; background: #fff;}
+    .main-header {background: #111; color: #fff; text-align: center; padding: 15px;}
+    .main-title { font-size: 24px; font-weight: bold;}
+    .sub-title { font-size: 14px; color: #ccc;}
+    .contact-info { font-size: 12px; color: #aaa;}
+    .app-container {padding: 15px;}
+    .database-item {padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;}
+    .database-item.active {background: #f0f0f0;}
+    .word-item {padding: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center;}
+    .word-text { flex-grow: 1; font-weight: bold;}
+    .word-actions button {margin-right: 5px; padding: 5px 10px; border-radius: 3px; border: none; cursor: pointer;}
+    .search-btn {background: #0078d7; color: #fff;}
+    .audio-btn {background: #4CAF50; color: #fff;}
+    .empty-message {text-align: center; color: #666; padding: 20px;}
+    .words-section {display: none;}
+    .words-section.active {display: block;}
+    h3 {color: #0078d7;}
+    #searchPage {display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:#fff; z-index:1000; overflow-y:auto;}
+    .links {display:flex; flex-direction:column; gap:10px; margin-top:10px;}
+    .links button {padding:10px; background:#0078d7; color:#fff; border:none; border-radius:5px; cursor:pointer;}
+    .links button:hover {background:#005fa3;}
+    #back-from-search {margin-top:10px; width:100%; padding:10px; background:#0078d7; color:#fff; border:none; border-radius:4px; cursor:pointer;}
+    #back-from-search:hover {background:#005fa3;}
+  </style>
+</head>
+<body>
+  <div class="main-header">
+    <div class="main-title">القاموس المورد القريب إنجليزي عربي</div>
+    <div class="sub-title">برمجة وتطوير محمد السيد</div>
+    <div class="contact-info">xpacxx2@hotmail.com | WhatsApp: +01221347946</div>
+  </div>
+
+  <div class="app-container" id="mainPage">
+    <h3>صفحات القاموس</h3>
+    <div id="databasesList"></div>
+    <div class="words-section" id="wordsSection">
+      <h3 id="wordsSectionTitle"></h3>
+      <div id="savedWordsList"></div>
+    </div>
+  </div>
+
+  <div id="searchPage">
+    <div class="app-container">
+      <h2>نتائج البحث عن: <span id="searchWord"></span></h2>
+      <div class="links">
+        <button onclick="openSite('bing')">Bing Images</button>
+        <button onclick="openSite('reverso')">Reverso Context</button>
+        <button onclick="openSite('translate')">Google Translate</button>
+        <button onclick="openSite('deepl')">DeepL Translate</button>
+        <button onclick="openSite('oxford')">Oxford Dictionary</button>
+        <button onclick="openSite('forvo')">Forvo</button>
+        <button onclick="openSite('youglish')">YouGlish</button>
+      </div>
+      <button id="back-from-search" onclick="goBackFromSearch()">العودة</button>
+    </div>
+  </div>
+
+  <script>
+    const autoUrls = [
+      "https://raw.githubusercontent.com/muhammedhaffez116-2pac/Mydatabasetest/refs/heads/main/009.json",
+      "https://raw.githubusercontent.com/muhammedhaffez116-2pac/Mydatabasetest/refs/heads/main/010.json",
+      "https://raw.githubusercontent.com/muhammedhaffez116-2pac/Mydatabasetest/refs/heads/main/011.json"
+    ];
+
+    let databases = [];
+    let currentDbIdx = null;
+    let currentWord = "";
+
+    function loadAllDatabases() {
+      databases = [];
+      autoUrls.forEach(url => {
+        fetch(url)
+          .then(r => r.json())
+          .then(data => {
+            const name = url.split('/').pop().replace('.json', '');
+            const words = Array.isArray(data) ? data : (data.words || []);
+            databases.push({name, words});
+          })
+          .catch(()=>{});
+      });
+      setTimeout(displayDatabases, 2000);
+    }
+
+    function displayDatabases() {
+      const list = document.getElementById('databasesList');
+      list.innerHTML = '';
+      if (!databases.length) {
+        list.innerHTML = '<div class="empty-message">لا توجد صفحات متاحة</div>';
+        return;
+      }
+      databases.forEach((db, i) => {
+        const div = document.createElement('div');
+        div.className = 'database-item';
+        div.textContent = db.name;
+        div.onclick = ()=>showWords(i);
+        if (currentDbIdx === i) div.classList.add('active');
+        list.appendChild(div);
+      });
+    }
+
+    function showWords(i) {
+      currentDbIdx = i;
+      displayDatabases();
+      const db = databases[i];
+      document.getElementById('wordsSection').classList.add('active');
+      document.getElementById('wordsSectionTitle').textContent = db.name;
+      const list = document.getElementById('savedWordsList');
+      list.innerHTML = '';
+      if (!db.words.length) {
+        list.innerHTML = '<div class="empty-message">لا توجد كلمات</div>';
+        return;
+      }
+      db.words.forEach(obj => {
+        const w = obj.word || obj;
+        const div = document.createElement('div');
+        div.className = 'word-item';
+        div.innerHTML = `<span class="word-text">${w}</span>
+          <div class="word-actions">
+            <button class="audio-btn" onclick="speakWord('${w}')">🔊</button>
+            <button class="search-btn" onclick="showSearchResults('${w}')">ابحث</button>
+          </div>`;
+        list.appendChild(div);
+      });
+    }
+
+    function speakWord(word) {
+      if ('speechSynthesis' in window) {
+        const u = new SpeechSynthesisUtterance(word);
+        u.lang = 'en-US';
+        speechSynthesis.speak(u);
+      }
+    }
+
+    function showSearchResults(word) {
+      currentWord = word;
+      document.getElementById('mainPage').style.display = 'none';
+      document.getElementById('searchPage').style.display = 'block';
+      document.getElementById('searchWord').textContent = word;
+    }
+
+    function openSite(site) {
+      const w = currentWord;
+      let url = "";
+      switch(site){
+        case 'bing': url = `https://www.bing.com/images/search?q=${encodeURIComponent(w)}`; break;
+        case 'reverso': url = `https://context.reverso.net/translation/english-arabic/${encodeURIComponent(w)}`; break;
+        case 'translate': url = `https://translate.google.com/?sl=en&tl=ar&text=${encodeURIComponent(w)}`; break;
+        case 'deepl': url = `https://www.deepl.com/translator#en/ar/${encodeURIComponent(w)}`; break;
+        case 'oxford': url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(w)}`; break;
+        case 'forvo': url = `https://forvo.com/word/${encodeURIComponent(w)}/#en`; break;
+        case 'youglish': url = `https://youglish.com/pronounce/${encodeURIComponent(w)}/english`; break;
+      }
+      window.location.href = url; // يفتح الموقع فعلاً داخل WebViewer
+    }
+
+    function goBackFromSearch() {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        document.getElementById('searchPage').style.display = 'none';
+        document.getElementById('mainPage').style.display = 'block';
+      }
+    }
+
+    window.onload = loadAllDatabases;
+  </script>
+</body>
+</html>
