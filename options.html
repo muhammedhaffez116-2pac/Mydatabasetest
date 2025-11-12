@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خيارات - إدارة القواميس</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .options-container {
+            text-align: center;
+            padding: 30px;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            background: #fff;
+            width: 320px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .back-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #0078d7;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .main-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .password-input {
+            padding: 12px;
+            width: 100%;
+            margin: 15px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .password-input:focus {
+            border-color: #0078d7;
+            outline: none;
+        }
+        .login-btn {
+            padding: 12px 20px;
+            background: #0078d7;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .login-btn:hover {
+            background: #005fa3;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+            display: none;
+            font-size: 14px;
+        }
+        .generator-container {
+            display: none;
+            text-align: center;
+        }
+        .generated-password {
+            padding: 12px;
+            width: 100%;
+            margin: 15px 0;
+            border: 2px solid #0078d7;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            background: #f0f8ff;
+            font-weight: bold;
+        }
+        .generate-btn {
+            padding: 12px 20px;
+            background: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .info-text {
+            font-size: 14px;
+            color: #666;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">رجوع</button>
+    
+    <div class="options-container" id="passwordSection">
+        <div class="main-title">خيارات النظام</div>
+        <input type="password" class="password-input" id="optionsPassword" placeholder="أدخل كلمة مرور الخيارات">
+        <button class="login-btn" onclick="checkOptionsPassword()">دخول</button>
+        <div class="error-message" id="errorMessage">كلمة المرور غير صحيحة</div>
+    </div>
+
+    <div class="options-container generator-container" id="generatorSection">
+        <div class="main-title">مولد كلمات المرور</div>
+        <div class="info-text">كلمة المرور المولدة صالحة لمدة ساعة واحدة</div>
+        <div class="generated-password" id="generatedPassword"></div>
+        <button class="generate-btn" onclick="generatePassword()">توليد كلمة مرور جديدة</button>
+        <div class="info-text" id="expiryInfo"></div>
+    </div>
+
+    <script>
+        function checkOptionsPassword() {
+            const password = document.getElementById('optionsPassword').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (password === '000000') {
+                document.getElementById('passwordSection').style.display = 'none';
+                document.getElementById('generatorSection').style.display = 'block';
+            } else {
+                errorMessage.style.display = 'block';
+            }
+        }
+
+        function generatePassword() {
+            // توليد كلمة مرور عشوائية مكونة من 8 أرقام
+            const newPassword = Math.floor(10000000 + Math.random() * 90000000).toString();
+            const expiryTime = new Date().getTime() + (60 * 60 * 1000); // ساعة واحدة
+            
+            // حفظ كلمة المرور المؤقتة
+            let tempPasswords = JSON.parse(localStorage.getItem('tempPasswords') || '[]');
+            tempPasswords.push({
+                password: newPassword,
+                expiry: expiryTime
+            });
+            localStorage.setItem('tempPasswords', JSON.stringify(tempPasswords));
+            
+            // عرض كلمة المرور المولدة
+            document.getElementById('generatedPassword').textContent = newPassword;
+            
+            // عرض وقت الانتهاء
+            const expiryDate = new Date(expiryTime);
+            document.getElementById('expiryInfo').textContent = 
+                `صالحة حتى: ${expiryDate.toLocaleTimeString('ar-EG')}`;
+        }
+
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+
+        // للسماح بالدخول عند الضغط على Enter
+        document.getElementById('optionsPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkOptionsPassword();
+            }
+        });
+
+        // إخفاء رسالة الخطأ عند البدء في الكتابة
+        document.getElementById('optionsPassword').addEventListener('input', function() {
+            document.getElementById('errorMessage').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
